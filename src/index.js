@@ -1,4 +1,3 @@
-import { add } from './calculator';
-import { add as typedAdd } from './typedCalculator';
+import MobxBaseStore from './BaseStore';
 
-export { add, typedAdd };
+export default MobxBaseStore;

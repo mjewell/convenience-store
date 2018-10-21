@@ -10,5 +10,6 @@ module.exports = {
     }
   },
   collectCoverage: true,
-  collectCoverageFrom: ['src/**/*.{js,jsx,ts,tsx}']
+  collectCoverageFrom: ['src/**/*.{js,jsx,ts,tsx}'],
+  setupTestFrameworkScriptFile: '<rootDir>test/setup.js'
 };

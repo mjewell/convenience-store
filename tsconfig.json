@@ -1,6 +1,8 @@
 {
   "compilerOptions": {
     "allowJs": true,
+    "esModuleInterop": true,
+    "jsx": "react",
     "moduleResolution": "node",
     "target": "es5",
     "module": "commonjs",
@@ -13,5 +15,6 @@
     "outDir": "dist/lib",
     "typeRoots": ["node_modules/@types"]
   },
+  "exclude": ["**/__tests__/**"],
   "include": ["src"]
 }
