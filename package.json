@@ -4,7 +4,7 @@
   "description": "",
   "main": "dist/lib/index.js",
   "scripts": {
-    "clean": "rimraf dist test",
+    "clean": "rimraf dist",
     "build": "run-s clean && tsc -p tsconfig.json",
     "lint": "run-s -c lint:*",
     "lint:js": "eslint src",
