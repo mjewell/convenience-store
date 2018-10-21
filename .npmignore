@@ -1,0 +1,13 @@
+src
+test
+.eslintrc
+.prettierignore
+jest.config.js
+LICENSE
+README.md
+tsconfig.json
+tslint.json
+.vscode
+.prettierignore
+**/*.test.*
+*.log
