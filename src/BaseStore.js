@@ -60,9 +60,9 @@ export default class BaseStore {
     // trigger this on the next tick because components that are marked as observer
     // do not get their props made observable until then, and we need to rerun `props`
     // based on them
-    // setTimeout(() => {
-    //   this.propsMadeObservable = true;
-    // });
+    setTimeout(() => {
+      this.propsMadeObservable = true;
+    });
   }
 
   @action.bound
@@ -82,7 +82,7 @@ export default class BaseStore {
 
   @computed
   get componentProps() {
-    // this.propsMadeObservable; // eslint-disable-line no-unused-expressions
+    this.propsMadeObservable; // eslint-disable-line no-unused-expressions
     return this.component ? this.component.props : {};
   }
 
