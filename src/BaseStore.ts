@@ -1,35 +1,23 @@
 import invariant from "invariant";
 import { action, computed, observable } from "mobx";
-import PropTypes from "prop-types";
+import { checkPropTypes } from "prop-types";
+import enforcePropTypes from "./enforcePropTypes";
+import {
+  Component,
+  InjectProps,
+  Props,
+  PropTypes,
+  StoreOptions
+} from "./types";
 
-interface PropTypes {
-  [key: string]: any;
-}
-
-interface Props {
-  [key: string]: any;
-}
-
-type InjectProps = () => Props;
-
-interface ComponentOptions {
-  delayBinding: boolean;
-}
-
-interface Component {
-  props: Props;
-}
-
-function isComponentOptions(
-  componentOrOptions: Component | ComponentOptions | null | undefined
-): componentOrOptions is ComponentOptions {
+function isOptions(
+  componentOrOptions: Component | StoreOptions | null | undefined
+): componentOrOptions is StoreOptions {
   if (!componentOrOptions) {
     return false;
   }
 
-  return (
-    typeof (componentOrOptions as ComponentOptions).delayBinding === "boolean"
-  );
+  return typeof (componentOrOptions as StoreOptions).delayBinding === "boolean";
 }
 
 export default class MobxBaseStore {
@@ -72,32 +60,22 @@ export default class MobxBaseStore {
 
   constructor(
     injectProps?: InjectProps | null,
-    component?: Component | ComponentOptions | null
+    componentOrOptions?: Component | StoreOptions | null
   ) {
     invariant(
       !injectProps || typeof injectProps === "function",
       "injectProps must be null or a function"
     );
 
-    /* istanbul ignore if */
-    if (process.env.NODE_ENV !== "test") {
-      setTimeout(() => {
-        invariant(
-          this.storeMetadata.constructionComplete,
-          `Stores should be created with ${
-            this.constructor.name
-          }.create instead of new ${this.constructor.name}`
-        );
-      });
-    }
+    this.enforceCreateUsage();
 
     this.injectProps = injectProps || (() => ({}));
 
-    if (isComponentOptions(component)) {
+    if (isOptions(componentOrOptions)) {
       this.component = null;
-      this.storeMetadata.delayBinding = component.delayBinding;
+      this.storeMetadata.delayBinding = componentOrOptions.delayBinding;
     } else {
-      this.component = component;
+      this.component = componentOrOptions;
       this.storeMetadata.delayBinding = false;
     }
 
@@ -110,8 +88,22 @@ export default class MobxBaseStore {
     });
   }
 
+  private enforceCreateUsage() {
+    /* istanbul ignore if */
+    if (process.env.NODE_ENV !== "test") {
+      setTimeout(() => {
+        invariant(
+          this.storeMetadata.constructionComplete,
+          `Stores should be created with ${
+            this.constructor.name
+          }.create instead of new ${this.constructor.name}`
+        );
+      });
+    }
+  }
+
   @action.bound
-  public completeSetup() {
+  private completeSetup() {
     if (!this.storeMetadata.setupComplete && typeof this.init === "function") {
       this.init();
     }
@@ -126,23 +118,23 @@ export default class MobxBaseStore {
   }
 
   @computed
-  get componentProps() {
+  public get componentProps() {
     this.propsMadeObservable; // tslint:disable-line no-unused-expression
     return this.component ? this.component.props : {};
   }
 
   @computed
-  get injectedProps() {
+  public get injectedProps() {
     return this.injectProps();
   }
 
   @computed
-  get defaultProps() {
+  public get defaultProps() {
     return (this.constructor as typeof MobxBaseStore).defaultProps || {};
   }
 
   @computed
-  get props() {
+  public get props() {
     invariant(
       this.storeMetadata.constructionComplete,
       "Binding must be complete before you can access props. Either you are using new instead of create, or you are accessing props in the constructor instead of init"
@@ -163,35 +155,15 @@ export default class MobxBaseStore {
     if (process.env.NODE_ENV !== "production") {
       const ConstructorClass = this.constructor as typeof MobxBaseStore;
       const storePropTypes = ConstructorClass.propTypes || {};
+      const storeName = ConstructorClass.name;
 
       /* istanbul ignore if */
       if (process.env.NODE_ENV !== "test") {
-        PropTypes.checkPropTypes(
-          storePropTypes,
-          newProps,
-          "prop",
-          this.constructor.name || "Store"
-        );
+        checkPropTypes(storePropTypes, newProps, "prop", storeName);
       }
 
-      // TODO: cannot spread this.props because it reads every property and fails here if they aren't in proptypes
       if (ConstructorClass.enforcePropTypes) {
-        const propTypesKeys = new Set(Object.keys(storePropTypes));
-        const className = this.constructor.name;
-
-        Object.keys(newProps).forEach(key => {
-          if (propTypesKeys.has(key)) {
-            return;
-          }
-
-          Object.defineProperty(newProps, key, {
-            get() {
-              throw new Error(
-                `${key} not specified in propTypes for ${className}`
-              );
-            }
-          });
-        });
+        enforcePropTypes(storePropTypes, newProps, storeName);
       }
     }
 
