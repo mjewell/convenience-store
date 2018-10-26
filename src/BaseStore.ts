@@ -54,7 +54,7 @@ export default class MobxBaseStore {
   @observable
   public propsMadeObservable = false;
 
-  public afterSetup?(): void;
+  public init?(): void;
 
   @action
   public static create(...args: any[]) {
@@ -112,13 +112,11 @@ export default class MobxBaseStore {
 
   @action.bound
   public completeSetup() {
-    const setupWasComplete = this.storeMetadata.setupComplete;
+    if (!this.storeMetadata.setupComplete && typeof this.init === "function") {
+      this.init();
+    }
 
     this.storeMetadata.setupComplete = true;
-
-    if (!setupWasComplete && typeof this.afterSetup === "function") {
-      this.afterSetup();
-    }
   }
 
   @action.bound
@@ -147,12 +145,12 @@ export default class MobxBaseStore {
   get props() {
     invariant(
       this.storeMetadata.constructionComplete,
-      "Setup must be complete before you can access props. Either you are using new instead of create, or you are accessing props in the constructor instead of afterSetup"
+      "Binding must be complete before you can access props. Either you are using new instead of create, or you are accessing props in the constructor instead of init"
     );
 
     invariant(
       this.storeMetadata.setupComplete,
-      "Setup must be complete before you can access props. Either pass a second argument to create, or call bindComponent"
+      "Binding must be complete before you can access props. Either call bindComponent, or do not pass delayBinding"
     );
 
     const newProps = {

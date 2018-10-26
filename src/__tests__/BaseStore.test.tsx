@@ -12,7 +12,7 @@ class MyStore extends BaseStore {
 
   public callback = jest.fn();
 
-  public afterSetup() {
+  public init() {
     this.callback();
   }
 }
@@ -44,14 +44,14 @@ it("should error if you access props in the constructor", () => {
   }
 
   expect(() => ConstructorPropsAccess.create(() => ({ x: 1 }))).toThrowError(
-    "Setup must be complete before you can access props. Either you are using new instead of create, or you are accessing props in the constructor instead of afterSetup"
+    "Binding must be complete before you can access props. Either you are using new instead of create, or you are accessing props in the constructor instead of init"
   );
 });
 
 it("should error if you use new instead of create and access props", () => {
   const store = new MyStore();
   expect(() => store.props).toThrowError(
-    "Setup must be complete before you can access props. Either you are using new instead of create, or you are accessing props in the constructor instead of afterSetup"
+    "Binding must be complete before you can access props. Either you are using new instead of create, or you are accessing props in the constructor instead of init"
   );
 });
 
@@ -59,36 +59,36 @@ it("should error if you access props before setup is complete", () => {
   const store = MyStore.create(null, { delayBinding: true });
 
   expect(() => store.props).toThrowError(
-    "Setup must be complete before you can access props. Either pass a second argument to create, or call bindComponent"
+    "Binding must be complete before you can access props. Either call bindComponent, or do not pass delayBinding"
   );
 });
 
 describe("create", () => {
-  it("should run afterSetup if it receives no arguments", () => {
+  it("should run init if it receives no arguments", () => {
     const store = MyStore.create() as MyStore;
 
     expect(store.callback).toHaveBeenCalled();
   });
 
-  it("should run afterSetup if it only receives a single argument", () => {
+  it("should run init if it only receives a single argument", () => {
     const store = MyStore.create(() => ({})) as MyStore;
 
     expect(store.callback).toHaveBeenCalled();
   });
 
-  it("should run afterSetup immediately if the second argument is null", () => {
+  it("should run init immediately if the second argument is null", () => {
     const store = MyStore.create(() => ({}), null) as MyStore;
 
     expect(store.callback).toHaveBeenCalled();
   });
 
-  it("should run afterSetup immediately if the second argument is a component", () => {
+  it("should run init immediately if the second argument is a component", () => {
     const store = MyStore.create(() => ({}), { props: {} }) as MyStore;
 
     expect(store.callback).toHaveBeenCalled();
   });
 
-  it("should not run afterSetup immediately if the second argument has a truthy property called delayBinding", () => {
+  it("should not run init immediately if the second argument has a truthy property called delayBinding", () => {
     const store = MyStore.create(() => ({}), { delayBinding: true }) as MyStore;
 
     expect(store.callback).not.toHaveBeenCalled();
@@ -109,7 +109,7 @@ describe("bindComponent", () => {
   });
 
   describe("when it is not bound in the constructor", () => {
-    it("should call afterSetup when you call it with null", () => {
+    it("should call init when you call it with null", () => {
       const store = MyStore.create(null, { delayBinding: true }) as MyStore;
 
       expect(store.callback).not.toHaveBeenCalled();
@@ -119,7 +119,7 @@ describe("bindComponent", () => {
       expect(store.callback).toHaveBeenCalled();
     });
 
-    it("should call afterSetup when you call it with a component", () => {
+    it("should call init when you call it with a component", () => {
       const store = MyStore.create(null, { delayBinding: true }) as MyStore;
 
       expect(store.callback).not.toHaveBeenCalled();
@@ -131,7 +131,7 @@ describe("bindComponent", () => {
       expect(store.callback).toHaveBeenCalled();
     });
 
-    it("should only call afterSetup the first time you call it", () => {
+    it("should only call init the first time you call it", () => {
       const store = MyStore.create(null, { delayBinding: true }) as MyStore;
 
       expect(store.callback).not.toHaveBeenCalled();
@@ -147,7 +147,7 @@ describe("bindComponent", () => {
   });
 
   describe("when it is bound in the constructor", () => {
-    it("should not call afterSetup when you call it with null", () => {
+    it("should not call init when you call it with null", () => {
       const store = MyStore.create() as MyStore;
 
       expect(store.callback).toHaveBeenCalled();
@@ -157,7 +157,7 @@ describe("bindComponent", () => {
       expect(store.callback).toHaveBeenCalledTimes(1);
     });
 
-    it("should not call afterSetup when you call it with a component", () => {
+    it("should not call init when you call it with a component", () => {
       const store = MyStore.create() as MyStore;
 
       expect(store.callback).toHaveBeenCalled();
@@ -300,7 +300,7 @@ it("should react to observer components", done => {
   let count = 0;
 
   class Store extends BaseStore {
-    public afterSetup() {
+    public init() {
       autorun(() => {
         this.props; // tslint:disable-line no-unused-expression
         count += 1;
