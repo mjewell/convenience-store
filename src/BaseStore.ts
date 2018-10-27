@@ -104,11 +104,13 @@ export default class MobxBaseStore {
 
   @action.bound
   private completeSetup() {
-    if (!this.storeMetadata.setupComplete && typeof this.init === "function") {
-      this.init();
-    }
+    const setupWasComplete = this.storeMetadata.setupComplete;
 
     this.storeMetadata.setupComplete = true;
+
+    if (!setupWasComplete && typeof this.init === "function") {
+      this.init();
+    }
   }
 
   @action.bound

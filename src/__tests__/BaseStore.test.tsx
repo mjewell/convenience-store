@@ -13,6 +13,7 @@ class MyStore extends BaseStore {
   public callback = jest.fn();
 
   public init() {
+    this.props; // tslint:disable-line no-unused-expression
     this.callback();
   }
 }
@@ -55,7 +56,7 @@ it("should error if you use new instead of create and access props", () => {
   );
 });
 
-it("should error if you access props before setup is complete", () => {
+it("should error if you access props before binding is complete", () => {
   const store = MyStore.create(null, { delayBinding: true });
 
   expect(() => store.props).toThrowError(
@@ -92,6 +93,22 @@ describe("create", () => {
     const store = MyStore.create(() => ({}), { delayBinding: true }) as MyStore;
 
     expect(store.callback).not.toHaveBeenCalled();
+  });
+});
+
+describe("init", () => {
+  it("can access props", () => {
+    class InitPropsStore extends BaseStore {
+      public static enforcePropTypes = false;
+
+      public callback = jest.fn();
+
+      public init() {
+        this.props; // tslint:disable-line no-unused-expression
+      }
+    }
+
+    expect(() => InitPropsStore.create()).not.toThrow();
   });
 });
 
