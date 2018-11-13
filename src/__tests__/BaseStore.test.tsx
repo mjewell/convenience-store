@@ -1,11 +1,13 @@
 import { shallow } from "enzyme";
-import { autorun } from "mobx";
+import { autorun, configure } from "mobx";
 import { observer } from "mobx-react";
 import PropTypes from "prop-types";
 import React from "react";
 import BaseStore from "../BaseStore";
 
 /* tslint:disable max-classes-per-file */
+
+configure({ enforceActions: "observed" });
 
 class MyStore extends BaseStore {
   public static enforcePropTypes = false;
@@ -18,7 +20,7 @@ class MyStore extends BaseStore {
   }
 }
 
-it("should error if it receives props that are not null or function", () => {
+it("errors if injectProps is not null or function", () => {
   expect(() => BaseStore.create(1)).toThrow(
     "injectProps must be null or a function"
   );
@@ -31,11 +33,39 @@ it("should error if it receives props that are not null or function", () => {
     "injectProps must be null or a function"
   );
 
+  expect(() => BaseStore.create()).not.toThrow();
   expect(() => BaseStore.create(null)).not.toThrow();
   expect(() => BaseStore.create(() => ({}))).not.toThrow();
 });
 
-it("should error if you access props in the constructor", () => {
+it("errors if component is not null, a component, or options", () => {
+  expect(() => BaseStore.create(null, 1)).toThrow(
+    "componentOrOptions must be null, a component, or an options object"
+  );
+
+  expect(() => BaseStore.create(null, [])).toThrow(
+    "componentOrOptions must be null, a component, or an options object"
+  );
+
+  expect(() => BaseStore.create(null, {})).toThrow(
+    "componentOrOptions must be null, a component, or an options object"
+  );
+
+  expect(() => BaseStore.create(null, { props: [] })).toThrow(
+    "componentOrOptions must be null, a component, or an options object"
+  );
+
+  expect(() => BaseStore.create(null, { delayBinding: 123 })).toThrow(
+    "componentOrOptions must be null, a component, or an options object"
+  );
+
+  expect(() => BaseStore.create(null, null)).not.toThrow();
+  expect(() => BaseStore.create(null, { props: {} })).not.toThrow();
+  expect(() => BaseStore.create(null, { delayBinding: false })).not.toThrow();
+  expect(() => BaseStore.create(null, { delayBinding: true })).not.toThrow();
+});
+
+it("errors if you access props in the constructor", () => {
   class ConstructorPropsAccess extends BaseStore {
     constructor(injectedProps: () => { x: number }) {
       super(injectedProps);
@@ -49,14 +79,14 @@ it("should error if you access props in the constructor", () => {
   );
 });
 
-it("should error if you use new instead of create and access props", () => {
+it("errors if you use new instead of create and access props", () => {
   const store = new MyStore();
   expect(() => store.props).toThrowError(
     "Binding must be complete before you can access props. Either you are using new instead of create, or you are accessing props in the constructor instead of init"
   );
 });
 
-it("should error if you access props before binding is complete", () => {
+it("errors if you access props before binding is complete", () => {
   const store = MyStore.create(null, { delayBinding: true });
 
   expect(() => store.props).toThrowError(
@@ -65,31 +95,31 @@ it("should error if you access props before binding is complete", () => {
 });
 
 describe("create", () => {
-  it("should run init if it receives no arguments", () => {
+  it("runs init immediately if it receives no arguments", () => {
     const store = MyStore.create() as MyStore;
 
     expect(store.callback).toHaveBeenCalled();
   });
 
-  it("should run init if it only receives a single argument", () => {
+  it("runs init immediately if it only receives a single argument", () => {
     const store = MyStore.create(() => ({})) as MyStore;
 
     expect(store.callback).toHaveBeenCalled();
   });
 
-  it("should run init immediately if the second argument is null", () => {
+  it("runs init immediately if the second argument is null", () => {
     const store = MyStore.create(() => ({}), null) as MyStore;
 
     expect(store.callback).toHaveBeenCalled();
   });
 
-  it("should run init immediately if the second argument is a component", () => {
+  it("runs init immediately if the second argument is a component", () => {
     const store = MyStore.create(() => ({}), { props: {} }) as MyStore;
 
     expect(store.callback).toHaveBeenCalled();
   });
 
-  it("should not run init immediately if the second argument has a truthy property called delayBinding", () => {
+  it("does not run init immediately if the second argument has a truthy property called delayBinding", () => {
     const store = MyStore.create(() => ({}), { delayBinding: true }) as MyStore;
 
     expect(store.callback).not.toHaveBeenCalled();
@@ -113,7 +143,7 @@ describe("init", () => {
 });
 
 describe("bindComponent", () => {
-  it("should set the component", () => {
+  it("sets the component", () => {
     const store = MyStore.create() as MyStore;
 
     store.bindComponent(null);
@@ -125,8 +155,24 @@ describe("bindComponent", () => {
     expect(store.component).toEqual({ props: {} });
   });
 
+  it("errors when not called with something that is null or a function", () => {
+    const store = MyStore.create() as MyStore;
+
+    expect(() => (store as any).bindComponent({ delayBinding: true })).toThrow(
+      "component must be null or a component"
+    );
+
+    expect(() => (store as any).bindComponent({ props: 1 })).toThrow(
+      "component must be null or a component"
+    );
+
+    expect(() => (store as any).bindComponent(1)).toThrow(
+      "component must be null or a component"
+    );
+  });
+
   describe("when it is not bound in the constructor", () => {
-    it("should call init when you call it with null", () => {
+    it("calls init when you call it with null", () => {
       const store = MyStore.create(null, { delayBinding: true }) as MyStore;
 
       expect(store.callback).not.toHaveBeenCalled();
@@ -136,7 +182,7 @@ describe("bindComponent", () => {
       expect(store.callback).toHaveBeenCalled();
     });
 
-    it("should call init when you call it with a component", () => {
+    it("calls init when you call it with a component", () => {
       const store = MyStore.create(null, { delayBinding: true }) as MyStore;
 
       expect(store.callback).not.toHaveBeenCalled();
@@ -148,7 +194,7 @@ describe("bindComponent", () => {
       expect(store.callback).toHaveBeenCalled();
     });
 
-    it("should only call init the first time you call it", () => {
+    it("only calls init the first time you call it", () => {
       const store = MyStore.create(null, { delayBinding: true }) as MyStore;
 
       expect(store.callback).not.toHaveBeenCalled();
@@ -164,7 +210,7 @@ describe("bindComponent", () => {
   });
 
   describe("when it is bound in the constructor", () => {
-    it("should not call init when you call it with null", () => {
+    it("does not call init when you call it with null", () => {
       const store = MyStore.create() as MyStore;
 
       expect(store.callback).toHaveBeenCalled();
@@ -174,7 +220,7 @@ describe("bindComponent", () => {
       expect(store.callback).toHaveBeenCalledTimes(1);
     });
 
-    it("should not call init when you call it with a component", () => {
+    it("does not call init when you call it with a component", () => {
       const store = MyStore.create() as MyStore;
 
       expect(store.callback).toHaveBeenCalled();
@@ -189,20 +235,34 @@ describe("bindComponent", () => {
 });
 
 describe("props", () => {
-  it("should be an empty object if no arguments are provided", () => {
+  it("is an empty object if no arguments are provided", () => {
     const store = MyStore.create();
 
     expect(store.props).toEqual({});
   });
 
-  it("should be the result of the function that is passed as the first argument", () => {
-    const store = MyStore.create(
-      () => ({
-        a: 1,
-        b: 2
-      }),
-      null
-    );
+  it("errors if injectProps does not return an object", () => {
+    expect(() => {
+      const store = MyStore.create(() => 1);
+      store.props; // tslint:disable-line no-unused-expression
+    }).toThrow("injectProps must return an object");
+
+    expect(() => {
+      const store = MyStore.create(() => []);
+      store.props; // tslint:disable-line no-unused-expression
+    }).toThrow("injectProps must return an object");
+
+    expect(() => {
+      const store = MyStore.create(() => null);
+      store.props; // tslint:disable-line no-unused-expression
+    }).toThrow("injectProps must return an object");
+  });
+
+  it("is the result of the function that is passed as the first argument", () => {
+    const store = MyStore.create(() => ({
+      a: 1,
+      b: 2
+    }));
 
     expect(store.props).toEqual({
       a: 1,
@@ -210,7 +270,7 @@ describe("props", () => {
     });
   });
 
-  it("should be taken from the component", () => {
+  it("is taken from the component", () => {
     const store = MyStore.create(null, {
       props: {
         a: 1,
@@ -224,7 +284,7 @@ describe("props", () => {
     });
   });
 
-  it("should overwrite passed in props with those from the component", () => {
+  it("overwrites passed in props with those from the component", () => {
     const store = MyStore.create(
       () => ({
         a: 1,
@@ -268,7 +328,7 @@ describe("propTypes", () => {
     );
   });
 
-  it("doesnt throw if you access props that arent in the propTypes when enforcePropTypes is false", () => {
+  it("does not throw if you access props that arent in the propTypes when enforcePropTypes is false", () => {
     class PropTypesClass extends BaseStore {
       public static enforcePropTypes = false;
 
@@ -291,7 +351,7 @@ describe("propTypes", () => {
 
   // this is not desired but proptypes doesn't let you inspect nested proptypes
   // this just serves as documentation of the current behaviour
-  it("doesnt throw if you access nested props that arent in the propTypes", () => {
+  it("does not throw if you access nested props that arent in the propTypes", () => {
     class PropTypesClass extends BaseStore {
       public static propTypes = {
         a: PropTypes.shape({
@@ -313,7 +373,7 @@ describe("propTypes", () => {
   });
 });
 
-it("should react to observer components", done => {
+it("reacts to observer components", done => {
   let count = 0;
 
   class Store extends BaseStore {

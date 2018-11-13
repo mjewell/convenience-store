@@ -2,6 +2,8 @@ import invariant from "invariant";
 import { action, computed, observable } from "mobx";
 import { checkPropTypes } from "prop-types";
 import enforcePropTypes from "./enforcePropTypes";
+import extractParams from "./extractParams";
+import { isComponent, isObject } from "./typeChecking";
 import {
   Component,
   InjectProps,
@@ -9,16 +11,6 @@ import {
   PropTypes,
   StoreOptions
 } from "./types";
-
-function isOptions(
-  componentOrOptions: Component | StoreOptions | null | undefined
-): componentOrOptions is StoreOptions {
-  if (!componentOrOptions) {
-    return false;
-  }
-
-  return typeof (componentOrOptions as StoreOptions).delayBinding === "boolean";
-}
 
 export default class MobxBaseStore {
   public static enforcePropTypes = true;
@@ -28,19 +20,17 @@ export default class MobxBaseStore {
   public static defaultProps?: Props;
 
   @observable
-  public storeMetadata = {
+  private storeMetadata = {
+    bindingComplete: false,
     constructionComplete: false,
     delayBinding: false,
-    setupComplete: false
+    propsMadeObservable: false
   };
 
-  public injectProps: InjectProps;
+  private injectProps: InjectProps;
 
   @observable
-  public component: Component | null | undefined;
-
-  @observable
-  public propsMadeObservable = false;
+  public component: Component | null;
 
   public init?(): void;
 
@@ -59,33 +49,29 @@ export default class MobxBaseStore {
   }
 
   constructor(
-    injectProps?: InjectProps | null,
-    componentOrOptions?: Component | StoreOptions | null
+    maybeInjectProps: InjectProps | null = null,
+    componentOrOptions: Component | StoreOptions | null = null
   ) {
-    invariant(
-      !injectProps || typeof injectProps === "function",
-      "injectProps must be null or a function"
-    );
-
     this.enforceCreateUsage();
 
-    this.injectProps = injectProps || (() => ({}));
+    const [injectProps, component, options] = extractParams(
+      maybeInjectProps,
+      componentOrOptions
+    );
 
-    if (isOptions(componentOrOptions)) {
-      this.component = null;
-      this.storeMetadata.delayBinding = componentOrOptions.delayBinding;
-    } else {
-      this.component = componentOrOptions;
-      this.storeMetadata.delayBinding = false;
-    }
+    this.injectProps = injectProps;
+    this.component = component;
+    this.storeMetadata.delayBinding = options.delayBinding;
 
     // trigger this on the next tick because components that are marked as observer
     // do not get their props made observable until then, and we need to rerun `props`
     // based on them
     // this is only required with mobx-react < v4.0.0
-    setTimeout(() => {
-      this.propsMadeObservable = true;
-    });
+    setTimeout(
+      action(() => {
+        this.storeMetadata.propsMadeObservable = true;
+      })
+    );
   }
 
   private enforceCreateUsage() {
@@ -104,30 +90,39 @@ export default class MobxBaseStore {
 
   @action.bound
   private completeSetup() {
-    const setupWasComplete = this.storeMetadata.setupComplete;
+    const bindingWasComplete = this.storeMetadata.bindingComplete;
 
-    this.storeMetadata.setupComplete = true;
+    this.storeMetadata.bindingComplete = true;
 
-    if (!setupWasComplete && typeof this.init === "function") {
+    if (!bindingWasComplete && typeof this.init === "function") {
       this.init();
     }
   }
 
   @action.bound
   public bindComponent(component: Component | null) {
+    invariant(
+      component === null || isComponent(component),
+      "component must be null or a component"
+    );
+
     this.component = component;
     this.completeSetup();
   }
 
   @computed
   public get componentProps() {
-    this.propsMadeObservable; // tslint:disable-line no-unused-expression
+    this.storeMetadata.propsMadeObservable; // tslint:disable-line no-unused-expression
     return this.component ? this.component.props : {};
   }
 
   @computed
   public get injectedProps() {
-    return this.injectProps();
+    const injectedProps = this.injectProps();
+
+    invariant(isObject(injectedProps), "injectProps must return an object");
+
+    return injectedProps;
   }
 
   @computed
@@ -143,7 +138,7 @@ export default class MobxBaseStore {
     );
 
     invariant(
-      this.storeMetadata.setupComplete,
+      this.storeMetadata.bindingComplete,
       "Binding must be complete before you can access props. Either call bindComponent, or do not pass delayBinding"
     );
 
