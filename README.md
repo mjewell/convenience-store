@@ -153,6 +153,8 @@ class Form extends Component {
 }
 ```
 
+For a more comprehensive example showing several different ways mobx-base-store can be used, check out this codesandbox: https://codesandbox.io/s/r43n32k6nn
+
 ## Design Decisions
 
 _Why does `injectProps` have to be a function?_
