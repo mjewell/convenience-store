@@ -1,3 +1,5 @@
+// TODO: better typing of props
+
 export interface PropTypes {
   [key: string]: any;
 }
@@ -9,7 +11,7 @@ export interface Props {
 export type InjectProps = () => Props;
 
 export interface StoreOptions {
-  delayBinding: boolean;
+  waitForMoreProps: boolean;
 }
 
 export interface Component {

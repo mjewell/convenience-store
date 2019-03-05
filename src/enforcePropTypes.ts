@@ -1,4 +1,4 @@
-import { Props, PropTypes } from "./types";
+import { Props, PropTypes } from './types';
 
 // TODO: cannot spread this.props because it reads every property and fails here if they aren't in proptypes
 export default function enforcePropTypes(
