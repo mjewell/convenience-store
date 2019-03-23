@@ -16,7 +16,7 @@ class MyStore extends BaseStore<any> {
 }
 
 it('errors if injectProps is not null or function', () => {
-  expect(() => BaseStore.create(1 as any)).toThrow(
+  expect(() => BaseStore.create(0 as any)).toThrow(
     'injectProps must be null or a function'
   );
 
@@ -34,7 +34,7 @@ it('errors if injectProps is not null or function', () => {
 });
 
 it('errors if options is not null or options', () => {
-  expect(() => BaseStore.create(null, 1 as any)).toThrow(
+  expect(() => BaseStore.create(null, 0 as any)).toThrow(
     'maybeOptions must be null or an options object'
   );
 

@@ -19,7 +19,7 @@ class MyStore extends BaseStore<any> {
 
 it('errors when not called with a component', () => {
   const store = MyStore.create() as MyStore;
-  expect(() => bindComponent(store, 1 as any)).toThrow(
+  expect(() => bindComponent(store, 0 as any)).toThrow(
     'component must be a React component'
   );
   expect(() => bindComponent(store, [] as any)).toThrow(
