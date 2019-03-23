@@ -1,5 +1,4 @@
 module.exports = {
-  preset: 'ts-jest/presets/js-with-ts',
   testEnvironment: 'node',
   coverageThreshold: {
     global: {
@@ -11,5 +10,5 @@ module.exports = {
   },
   collectCoverage: true,
   collectCoverageFrom: ['src/**/*.{js,jsx,ts,tsx}'],
-  setupTestFrameworkScriptFile: '<rootDir>test/setup.js'
+  setupFilesAfterEnv: ['<rootDir>test/setup.js']
 };

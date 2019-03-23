@@ -1,13 +1,12 @@
 coverage
 src
 test
+.browserslistrc
 .eslintrc
 .prettierignore
 jest.config.js
 tsconfig.json
-tslint.json
 yarn.lock
 .vscode
-.prettierignore
-**/*.test.*
+**/__tests__/**/*
 *.log
