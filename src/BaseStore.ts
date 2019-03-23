@@ -1,85 +1,68 @@
-import invariant from "invariant";
-import { action, computed, observable } from "mobx";
-import { checkPropTypes } from "prop-types";
-import enforcePropTypes from "./enforcePropTypes";
-import extractParams from "./extractParams";
-import { isComponent, isObject } from "./typeChecking";
-import {
-  Component,
-  InjectProps,
-  Props,
-  PropTypes,
-  StoreOptions
-} from "./types";
+import invariant from 'invariant';
+import { action, computed, observable } from 'mobx';
+import { checkPropTypes } from 'prop-types';
+import enforcePropTypes from './enforcePropTypes';
+import extractParams from './extractParams';
+import { isObject } from './typeChecking';
+import { InjectProps, PropTypes, StoreOptions } from './types';
 
-export default class MobxBaseStore {
+export default class MobxBaseStore<Props> {
   public static enforcePropTypes = true;
 
   public static propTypes?: PropTypes;
 
-  public static defaultProps?: Props;
+  public static defaultProps?: { [key: string]: any }; // TODO: type me
 
   @observable
   private storeMetadata = {
-    bindingComplete: false,
-    constructionComplete: false,
-    delayBinding: false,
-    propsMadeObservable: false
+    constructorComplete: false,
+    setupComplete: false,
+    waitForMoreProps: false
   };
 
-  private injectProps: InjectProps;
-
   @observable
-  public component: Component | null;
+  public assignedProps: Partial<Props> = {};
+
+  private injectProps: InjectProps<Partial<Props>>;
 
   public init?(): void;
 
   @action
-  public static create(...args: any[]) {
-    const SubclassConstructor: any = this;
-    const instance: MobxBaseStore = new SubclassConstructor(...args);
+  public static create<T extends MobxBaseStore<P>, P>(
+    this: new (...args: any[]) => T,
+    maybeInjectProps: InjectProps<Partial<P>> | null = null,
+    maybeOptions: StoreOptions | null = null
+  ): T {
+    const instance = new this(maybeInjectProps, maybeOptions) as T;
 
-    instance.storeMetadata.constructionComplete = true;
+    instance.storeMetadata.constructorComplete = true;
 
-    if (!instance.storeMetadata.delayBinding) {
-      instance.completeSetup();
-    }
+    instance.maybeCompleteSetup();
 
     return instance;
   }
 
-  constructor(
-    maybeInjectProps: InjectProps | null = null,
-    componentOrOptions: Component | StoreOptions | null = null
+  public constructor(
+    maybeInjectProps: InjectProps<Partial<Props>> | null = null,
+    maybeOptions: StoreOptions | null = null
   ) {
     this.enforceCreateUsage();
 
-    const [injectProps, component, options] = extractParams(
+    const [injectProps, options] = extractParams(
       maybeInjectProps,
-      componentOrOptions
+      maybeOptions
     );
 
     this.injectProps = injectProps;
-    this.component = component;
-    this.storeMetadata.delayBinding = options.delayBinding;
-
-    // trigger this on the next tick because components that are marked as observer
-    // do not get their props made observable until then, and we need to rerun `props`
-    // based on them
-    // this is only required with mobx-react < v4.0.0
-    setTimeout(
-      action(() => {
-        this.storeMetadata.propsMadeObservable = true;
-      })
-    );
+    this.storeMetadata.waitForMoreProps = options.waitForMoreProps;
   }
 
-  private enforceCreateUsage() {
+  private enforceCreateUsage(): void {
     /* istanbul ignore if */
-    if (process.env.NODE_ENV !== "test") {
+    if (process.env.NODE_ENV !== 'test') {
       setTimeout(() => {
         invariant(
-          this.storeMetadata.constructionComplete,
+          this.storeMetadata.constructorComplete,
           `Stores should be created with ${
             this.constructor.name
           }.create instead of new ${this.constructor.name}`
@@ -89,74 +72,73 @@ export default class MobxBaseStore {
   }
 
   @action.bound
-  private completeSetup() {
-    const bindingWasComplete = this.storeMetadata.bindingComplete;
+  private maybeCompleteSetup(): void {
+    const { waitForMoreProps, setupComplete } = this.storeMetadata;
 
-    this.storeMetadata.bindingComplete = true;
+    if (waitForMoreProps || setupComplete) {
+      return;
+    }
 
-    if (!bindingWasComplete && typeof this.init === "function") {
+    this.storeMetadata.setupComplete = true;
+
+    if (typeof this.init === 'function') {
       this.init();
     }
   }
 
   @action.bound
-  public bindComponent(component: Component | null) {
-    invariant(
-      component === null || isComponent(component),
-      "component must be null or a component"
-    );
+  public setProps(
+    props: Partial<Props>,
+    maybeOptions: StoreOptions = { waitForMoreProps: false }
+  ): void {
+    invariant(isObject(props), 'props must be a plain object');
 
-    this.component = component;
-    this.completeSetup();
+    this.storeMetadata.waitForMoreProps = maybeOptions.waitForMoreProps;
+    this.assignedProps = props;
+    this.maybeCompleteSetup();
   }
 
   @computed
-  public get componentProps() {
-    this.storeMetadata.propsMadeObservable; // tslint:disable-line no-unused-expression
-    return this.component ? this.component.props : {};
-  }
-
-  @computed
-  public get injectedProps() {
+  public get injectedProps(): Partial<Props> {
     const injectedProps = this.injectProps();
 
-    invariant(isObject(injectedProps), "injectProps must return an object");
+    invariant(isObject(injectedProps), 'injectProps must return an object');
 
     return injectedProps;
   }
 
   @computed
-  public get defaultProps() {
+  public get defaultProps(): { [key: string]: any } {
     return (this.constructor as typeof MobxBaseStore).defaultProps || {};
   }
 
   @computed
-  public get props() {
+  public get props(): Props {
     invariant(
-      this.storeMetadata.constructionComplete,
-      "Binding must be complete before you can access props. Either you are using new instead of create, or you are accessing props in the constructor instead of init"
+      this.storeMetadata.constructorComplete,
+      'Setup must be complete before you can access props. Either you are using new instead of create, or you are accessing props in the constructor instead of init'
     );
 
     invariant(
-      this.storeMetadata.bindingComplete,
-      "Binding must be complete before you can access props. Either call bindComponent, or do not pass delayBinding"
+      this.storeMetadata.setupComplete,
+      'Setup must be complete before you can access props. Call setProps without providing waitForMoreProps'
     );
 
     const newProps = {
       ...this.defaultProps,
       ...this.injectedProps,
-      ...this.componentProps
+      ...this.assignedProps
     };
 
     /* istanbul ignore else */
-    if (process.env.NODE_ENV !== "production") {
+    if (process.env.NODE_ENV !== 'production') {
       const ConstructorClass = this.constructor as typeof MobxBaseStore;
       const storePropTypes = ConstructorClass.propTypes || {};
       const storeName = ConstructorClass.name;
 
       /* istanbul ignore if */
-      if (process.env.NODE_ENV !== "test") {
-        checkPropTypes(storePropTypes, newProps, "prop", storeName);
+      if (process.env.NODE_ENV !== 'test') {
+        checkPropTypes(storePropTypes, newProps, 'prop', storeName);
       }
 
       if (ConstructorClass.enforcePropTypes) {
@@ -164,6 +146,6 @@ export default class MobxBaseStore {
       }
     }
 
-    return newProps;
+    return newProps as Props;
   }
 }

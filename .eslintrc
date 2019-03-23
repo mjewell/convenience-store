@@ -2,30 +2,21 @@
   "env": {
     "jest": true
   },
-  "extends": ["airbnb", "prettier", "prettier/react"],
-  "parser": "babel-eslint",
+  "extends": [
+    "airbnb",
+    "plugin:@typescript-eslint/recommended",
+    "prettier",
+    "prettier/@typescript-eslint"
+  ],
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "project": "./tsconfig.json"
+  },
+  "plugins": ["@typescript-eslint"],
   "rules": {
-    "arrow-parens": ["error", "as-needed"],
-    "comma-dangle": ["error", "never"],
-    "func-names": ["warn", "always", { "generators": "never" }],
     "import/prefer-default-export": "off",
-    "max-len": ["error", { "code": 80, "tabWidth": 2 }],
-    "no-param-reassign": [
-      "error",
-      { "ignorePropertyModificationsFor": ["self"] }
-    ],
-    "react/jsx-filename-extension": "off",
-    "react/prop-types": "off",
-    "quotes": ["error", "single", { "avoidEscape": true }],
-    "react/no-unescaped-entities": "warn",
     "react/sort-comp": "off",
-    "jsx-a11y/anchor-is-valid": [
-      "error",
-      {
-        "components": ["Link"],
-        "specialLink": ["to"]
-      }
-    ]
+    "react/jsx-filename-extension": "off"
   },
   "settings": {
     "import/resolver": {

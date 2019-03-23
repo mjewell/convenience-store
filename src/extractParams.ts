@@ -1,32 +1,28 @@
-import invariant from "invariant";
-import { isComponent, isInjectProps, isOptions } from "./typeChecking";
-import { Component, InjectProps, StoreOptions } from "./types";
+import invariant from 'invariant';
+import { isInjectProps, isOptions } from './typeChecking';
+import { InjectProps, StoreOptions } from './types';
 
 const defaultOptions = {
-  delayBinding: false
+  waitForMoreProps: false
 };
 
-export default function extractParams(
-  maybeInjectProps: InjectProps | null = null,
-  componentOrOptions: Component | StoreOptions | null
-): [InjectProps, Component | null, StoreOptions] {
+export default function extractParams<Props>(
+  maybeInjectProps: InjectProps<Partial<Props>> | null = null,
+  maybeOptions: StoreOptions | null
+): [InjectProps<Partial<Props>>, StoreOptions] {
   invariant(
-    maybeInjectProps === null || isInjectProps(maybeInjectProps),
-    "injectProps must be null or a function"
+    maybeInjectProps === null ||
+      isInjectProps<Partial<Props>>(maybeInjectProps),
+    'injectProps must be null or a function'
   );
 
   invariant(
-    componentOrOptions === null ||
-      isComponent(componentOrOptions) ||
-      isOptions(componentOrOptions),
-    "componentOrOptions must be null, a component, or an options object"
+    maybeOptions === null || isOptions(maybeOptions),
+    'maybeOptions must be null or an options object'
   );
 
   const injectProps = maybeInjectProps || (() => ({}));
+  const options = { ...defaultOptions, ...maybeOptions };
 
-  if (isOptions(componentOrOptions)) {
-    return [injectProps, null, componentOrOptions];
-  }
-
-  return [injectProps, componentOrOptions, defaultOptions];
+  return [injectProps, options];
 }

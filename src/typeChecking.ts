@@ -1,18 +1,26 @@
-import { Component, StoreOptions } from "./types";
+import { InjectProps, Component, StoreOptions } from './types';
 
 export function isObject(maybeObj: any): maybeObj is object {
-  return !!maybeObj && maybeObj.constructor === Object;
+  if (!maybeObj) {
+    return false;
+  }
+
+  return maybeObj.constructor === Object;
 }
 
-export function isInjectProps(injectProps: any): injectProps is Component {
+export function isInjectProps<Props>(
+  injectProps: any
+): injectProps is InjectProps<Props> {
   if (!injectProps) {
     return false;
   }
 
-  return typeof injectProps === "function";
+  return typeof injectProps === 'function';
 }
 
-export function isComponent(component: any): component is Component {
+export function isComponent<Props>(
+  component: any
+): component is Component<Props> {
   if (!component) {
     return false;
   }
@@ -25,5 +33,5 @@ export function isOptions(options: any): options is StoreOptions {
     return false;
   }
 
-  return typeof options.delayBinding === "boolean";
+  return typeof options.waitForMoreProps === 'boolean';
 }
