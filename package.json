@@ -11,9 +11,9 @@
     "bundle": "webpack",
     "clean:build": "rimraf lib",
     "clean:bundle": "rimraf dist",
-    "lint": "eslint src",
+    "lint": "eslint src --ext js,jsx,ts,tsx",
     "test": "jest --maxWorkers ${JEST_MAX_WORKERS:-0}",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit -p tsconfig.typechecking.json"
   },
   "repository": {
     "type": "git",
