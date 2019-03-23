@@ -2,31 +2,29 @@ import { configure } from 'mobx';
 import PropTypes from 'prop-types';
 import BaseStore from '..';
 
-/* tslint:disable max-classes-per-file */
-
 configure({ enforceActions: 'observed' });
 
-class MyStore extends BaseStore {
+class MyStore extends BaseStore<any> {
   public static enforcePropTypes = false;
 
   public callback = jest.fn();
 
-  public init() {
-    this.props; // tslint:disable-line no-unused-expression
+  public init(): void {
+    this.props; // eslint-disable-line no-unused-expressions
     this.callback();
   }
 }
 
 it('errors if injectProps is not null or function', () => {
-  expect(() => BaseStore.create(1)).toThrow(
+  expect(() => BaseStore.create(1 as any)).toThrow(
     'injectProps must be null or a function'
   );
 
-  expect(() => BaseStore.create([])).toThrow(
+  expect(() => BaseStore.create([] as any)).toThrow(
     'injectProps must be null or a function'
   );
 
-  expect(() => BaseStore.create({})).toThrow(
+  expect(() => BaseStore.create({} as any)).toThrow(
     'injectProps must be null or a function'
   );
 
@@ -36,21 +34,21 @@ it('errors if injectProps is not null or function', () => {
 });
 
 it('errors if options is not null or options', () => {
-  expect(() => BaseStore.create(null, 1)).toThrow(
+  expect(() => BaseStore.create(null, 1 as any)).toThrow(
     'maybeOptions must be null or an options object'
   );
 
-  expect(() => BaseStore.create(null, [])).toThrow(
+  expect(() => BaseStore.create(null, [] as any)).toThrow(
     'maybeOptions must be null or an options object'
   );
 
-  expect(() => BaseStore.create(null, {})).toThrow(
+  expect(() => BaseStore.create(null, {} as any)).toThrow(
     'maybeOptions must be null or an options object'
   );
 
-  expect(() => BaseStore.create(null, { waitForMoreProps: 123 })).toThrow(
-    'maybeOptions must be null or an options object'
-  );
+  expect(() =>
+    BaseStore.create(null, { waitForMoreProps: 123 } as any)
+  ).toThrow('maybeOptions must be null or an options object');
 
   expect(() => BaseStore.create(null, null)).not.toThrow();
   expect(() =>
@@ -62,11 +60,11 @@ it('errors if options is not null or options', () => {
 });
 
 it('errors if you access props in the constructor', () => {
-  class ConstructorPropsAccess extends BaseStore {
-    constructor(injectedProps: () => { x: number }) {
+  class ConstructorPropsAccess extends BaseStore<{ x: number }> {
+    public constructor(injectedProps: () => { x: number }) {
       super(injectedProps);
 
-      this.props; // tslint:disable-line no-unused-expression
+      this.props; // eslint-disable-line no-unused-expressions
     }
   }
 
@@ -75,12 +73,12 @@ it('errors if you access props in the constructor', () => {
   );
 });
 
-// it('errors if you use new instead of create and access props', () => {
-//   const store = new MyStore();
-//   expect(() => store.props).toThrowError(
-//     'Setup must be complete before you can access props. Either you are using new instead of create, or you are accessing props in the constructor instead of init'
-//   );
-// });
+it('errors if you use new instead of create and access props', () => {
+  const store = new MyStore();
+  expect(() => store.props).toThrowError(
+    'Setup must be complete before you can access props. Either you are using new instead of create, or you are accessing props in the constructor instead of init'
+  );
+});
 
 it('errors if you access props before setup is complete', () => {
   const store = MyStore.create(null, { waitForMoreProps: true });
@@ -112,7 +110,7 @@ describe('create', () => {
   it('does not run init immediately if the second argument has a true property called waitForMoreProps', () => {
     const store = MyStore.create(() => ({}), {
       waitForMoreProps: true
-    }) as MyStore;
+    });
 
     expect(store.callback).not.toHaveBeenCalled();
   });
@@ -120,13 +118,13 @@ describe('create', () => {
 
 describe('init', () => {
   it('can access props', () => {
-    class InitPropsStore extends BaseStore {
+    class InitPropsStore extends BaseStore<any> {
       public static enforcePropTypes = false;
 
       public callback = jest.fn();
 
-      public init() {
-        this.props; // tslint:disable-line no-unused-expression
+      public init(): void {
+        this.props; // eslint-disable-line no-unused-expressions
       }
     }
 
@@ -135,8 +133,18 @@ describe('init', () => {
 });
 
 describe('setProps', () => {
+  it('errors if props is not an object', () => {
+    const store = MyStore.create(null, { waitForMoreProps: true });
+
+    expect(store.callback).not.toHaveBeenCalled();
+
+    expect(() => store.setProps(1 as any)).toThrowError(
+      'props must be a plain object'
+    );
+  });
+
   it('triggers init if it hasnt been triggered yet', () => {
-    const store = MyStore.create(null, { waitForMoreProps: true }) as MyStore;
+    const store = MyStore.create(null, { waitForMoreProps: true });
 
     expect(store.callback).not.toHaveBeenCalled();
 
@@ -165,18 +173,18 @@ describe('props', () => {
 
   it('errors if injectProps does not return an object', () => {
     expect(() => {
-      const store = MyStore.create(() => 1);
-      store.props; // tslint:disable-line no-unused-expression
+      const store = MyStore.create(() => 1 as any);
+      store.props; // eslint-disable-line no-unused-expressions
     }).toThrow('injectProps must return an object');
 
     expect(() => {
-      const store = MyStore.create(() => []);
-      store.props; // tslint:disable-line no-unused-expression
+      const store = MyStore.create(() => [] as any);
+      store.props; // eslint-disable-line no-unused-expressions
     }).toThrow('injectProps must return an object');
 
     expect(() => {
-      const store = MyStore.create(() => null);
-      store.props; // tslint:disable-line no-unused-expression
+      const store = MyStore.create((() => null) as any);
+      store.props; // eslint-disable-line no-unused-expressions
     }).toThrow('injectProps must return an object');
   });
 
@@ -227,20 +235,17 @@ describe('props', () => {
 
 describe('propTypes', () => {
   it('throws if you access props that arent in the propTypes', () => {
-    class PropTypesClass extends BaseStore {
+    class PropTypesClass extends BaseStore<{ a: number }> {
       public static propTypes = {
         a: PropTypes.number
       };
 
-      public doSomething() {
-        const x = this.props.b;
+      public doSomething(): void {
+        (this.props as any).b; // eslint-disable-line no-unused-expressions
       }
     }
 
-    const store = PropTypesClass.create(
-      () => ({ a: 1, b: 2 }),
-      null
-    ) as PropTypesClass;
+    const store = PropTypesClass.create(() => ({ a: 1, b: 2 } as any), null);
 
     expect(() => store.doSomething()).toThrowError(
       'b not specified in propTypes for PropTypesClass'
@@ -248,22 +253,19 @@ describe('propTypes', () => {
   });
 
   it('does not throw if you access props that arent in the propTypes when enforcePropTypes is false', () => {
-    class PropTypesClass extends BaseStore {
+    class PropTypesClass extends BaseStore<{ a: number }> {
       public static enforcePropTypes = false;
 
       public static propTypes = {
         a: PropTypes.number
       };
 
-      public doSomething() {
-        const x = this.props.b;
+      public doSomething(): void {
+        (this.props as any).b; // eslint-disable-line no-unused-expressions
       }
     }
 
-    const store = PropTypesClass.create(
-      () => ({ a: 1, b: 2 }),
-      null
-    ) as PropTypesClass;
+    const store = PropTypesClass.create(() => ({ a: 1, b: 2 } as any), null);
 
     expect(() => store.doSomething()).not.toThrow();
   });
@@ -271,22 +273,22 @@ describe('propTypes', () => {
   // this is not desired but proptypes doesn't let you inspect nested proptypes
   // this just serves as documentation of the current behaviour
   it('does not throw if you access nested props that arent in the propTypes', () => {
-    class PropTypesClass extends BaseStore {
+    class PropTypesClass extends BaseStore<{ a: { b: number } }> {
       public static propTypes = {
         a: PropTypes.shape({
           b: PropTypes.number
         })
       };
 
-      public doSomething() {
-        const x = this.props.a.c;
+      public doSomething(): void {
+        (this.props.a as any).c; // eslint-disable-line no-unused-expressions
       }
     }
 
     const store = PropTypesClass.create(
-      () => ({ a: { b: 1, c: 2 } }),
+      () => ({ a: { b: 1, c: 2 } } as any),
       null
-    ) as PropTypesClass;
+    );
 
     expect(() => store.doSomething()).not.toThrow();
   });

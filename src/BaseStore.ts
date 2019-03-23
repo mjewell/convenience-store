@@ -4,14 +4,14 @@ import { checkPropTypes } from 'prop-types';
 import enforcePropTypes from './enforcePropTypes';
 import extractParams from './extractParams';
 import { isObject } from './typeChecking';
-import { InjectProps, Props, PropTypes, StoreOptions } from './types';
+import { InjectProps, PropTypes, StoreOptions } from './types';
 
-export default class MobxBaseStore {
+export default class MobxBaseStore<Props> {
   public static enforcePropTypes = true;
 
   public static propTypes?: PropTypes;
 
-  public static defaultProps?: Props;
+  public static defaultProps?: { [key: string]: any }; // TODO: type me
 
   @observable
   private storeMetadata = {
@@ -21,16 +21,19 @@ export default class MobxBaseStore {
   };
 
   @observable
-  public assignedProps = {};
+  public assignedProps: Partial<Props> = {};
 
-  private injectProps: InjectProps;
+  private injectProps: InjectProps<Partial<Props>>;
 
   public init?(): void;
 
   @action
-  public static create(...args: any[]) {
-    const SubclassConstructor: any = this;
-    const instance: MobxBaseStore = new SubclassConstructor(...args);
+  public static create<T extends MobxBaseStore<P>, P>(
+    this: new (...args: any[]) => T,
+    maybeInjectProps: InjectProps<Partial<P>> | null = null,
+    maybeOptions: StoreOptions | null = null
+  ): T {
+    const instance = new this(maybeInjectProps, maybeOptions) as T;
 
     instance.storeMetadata.constructorComplete = true;
 
@@ -39,8 +42,8 @@ export default class MobxBaseStore {
     return instance;
   }
 
-  constructor(
-    maybeInjectProps: InjectProps | null = null,
+  public constructor(
+    maybeInjectProps: InjectProps<Partial<Props>> | null = null,
     maybeOptions: StoreOptions | null = null
   ) {
     this.enforceCreateUsage();
@@ -54,7 +57,7 @@ export default class MobxBaseStore {
     this.storeMetadata.waitForMoreProps = options.waitForMoreProps;
   }
 
-  private enforceCreateUsage() {
+  private enforceCreateUsage(): void {
     /* istanbul ignore if */
     if (process.env.NODE_ENV !== 'test') {
       setTimeout(() => {
@@ -69,7 +72,7 @@ export default class MobxBaseStore {
   }
 
   @action.bound
-  private maybeCompleteSetup() {
+  private maybeCompleteSetup(): void {
     const { waitForMoreProps, setupComplete } = this.storeMetadata;
 
     if (waitForMoreProps || setupComplete) {
@@ -85,9 +88,9 @@ export default class MobxBaseStore {
 
   @action.bound
   public setProps(
-    props: Props,
+    props: Partial<Props>,
     maybeOptions: StoreOptions = { waitForMoreProps: false }
-  ) {
+  ): void {
     invariant(isObject(props), 'props must be a plain object');
 
     this.storeMetadata.waitForMoreProps = maybeOptions.waitForMoreProps;
@@ -96,7 +99,7 @@ export default class MobxBaseStore {
   }
 
   @computed
-  public get injectedProps() {
+  public get injectedProps(): Partial<Props> {
     const injectedProps = this.injectProps();
 
     invariant(isObject(injectedProps), 'injectProps must return an object');
@@ -105,7 +108,7 @@ export default class MobxBaseStore {
   }
 
   @computed
-  public get defaultProps() {
+  public get defaultProps(): { [key: string]: any } {
     return (this.constructor as typeof MobxBaseStore).defaultProps || {};
   }
 
@@ -143,6 +146,6 @@ export default class MobxBaseStore {
       }
     }
 
-    return newProps;
+    return newProps as Props;
   }
 }

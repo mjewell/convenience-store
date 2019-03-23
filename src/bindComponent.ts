@@ -1,16 +1,19 @@
-import { reaction } from 'mobx';
 import invariant from 'invariant';
+import { reaction, IReactionDisposer } from 'mobx';
 import MobxBaseStore from './BaseStore';
 import { isComponent } from './typeChecking';
-import { Component, Props } from './types';
+import { Component } from './types';
 
-export default function bindComponent(
-  store: MobxBaseStore,
-  component: Component
-) {
+export default function bindComponent<
+  StoreProps,
+  ComponentProps extends Partial<{ [K in keyof StoreProps]: StoreProps[K] }>
+>(
+  store: MobxBaseStore<StoreProps>,
+  component: Component<ComponentProps>
+): IReactionDisposer {
   invariant(isComponent(component), 'component must be a React component');
 
-  reaction(() => component.props, (props: Props) => store.setProps(props), {
+  return reaction(() => component.props, props => store.setProps(props), {
     fireImmediately: true
   });
 }

@@ -1,4 +1,4 @@
-import { Component, StoreOptions } from './types';
+import { InjectProps, Component, StoreOptions } from './types';
 
 export function isObject(maybeObj: any): maybeObj is object {
   if (!maybeObj) {
@@ -8,7 +8,9 @@ export function isObject(maybeObj: any): maybeObj is object {
   return maybeObj.constructor === Object;
 }
 
-export function isInjectProps(injectProps: any): injectProps is Component {
+export function isInjectProps<Props>(
+  injectProps: any
+): injectProps is InjectProps<Props> {
   if (!injectProps) {
     return false;
   }
@@ -16,7 +18,9 @@ export function isInjectProps(injectProps: any): injectProps is Component {
   return typeof injectProps === 'function';
 }
 
-export function isComponent(component: any): component is Component {
+export function isComponent<Props>(
+  component: any
+): component is Component<Props> {
   if (!component) {
     return false;
   }

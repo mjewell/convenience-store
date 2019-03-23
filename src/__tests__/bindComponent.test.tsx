@@ -6,13 +6,13 @@ import BaseStore, { bindComponent } from '..';
 
 configure({ enforceActions: 'observed' });
 
-class MyStore extends BaseStore {
+class MyStore extends BaseStore<any> {
   public static enforcePropTypes = false;
 
   public callback = jest.fn();
 
-  public init() {
-    this.props; // tslint:disable-line no-unused-expression
+  public init(): void {
+    this.props; // eslint-disable-line no-unused-expressions
     this.callback();
   }
 }
@@ -38,10 +38,10 @@ it('sets the props to the components props', () => {
 it('reacts to observer components', done => {
   let count = 0;
 
-  class Store extends BaseStore {
-    public init() {
+  class Store extends BaseStore<any> {
+    public init(): void {
       autorun(() => {
-        this.props; // tslint:disable-line no-unused-expression
+        this.props; // eslint-disable-line no-unused-expressions
         count += 1;
       });
     }
@@ -51,14 +51,14 @@ it('reacts to observer components', done => {
   class ObserverComponent extends React.Component<{ store: Store; x: number }> {
     public store: Store;
 
-    constructor(props: { store: Store; x: number }) {
+    public constructor(props: { store: Store; x: number }) {
       super(props);
 
       this.store = props.store;
       bindComponent(this.store, this);
     }
 
-    public render() {
+    public render(): JSX.Element {
       return <div>hello</div>;
     }
   }

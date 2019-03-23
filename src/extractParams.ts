@@ -6,12 +6,13 @@ const defaultOptions = {
   waitForMoreProps: false
 };
 
-export default function extractParams(
-  maybeInjectProps: InjectProps | null = null,
+export default function extractParams<Props>(
+  maybeInjectProps: InjectProps<Partial<Props>> | null = null,
   maybeOptions: StoreOptions | null
-): [InjectProps, StoreOptions] {
+): [InjectProps<Partial<Props>>, StoreOptions] {
   invariant(
-    maybeInjectProps === null || isInjectProps(maybeInjectProps),
+    maybeInjectProps === null ||
+      isInjectProps<Partial<Props>>(maybeInjectProps),
     'injectProps must be null or a function'
   );
 
