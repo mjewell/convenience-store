@@ -2,40 +2,38 @@
 
 Mobx base store allows you to take the logic out of your react components while maintaining a familiar api. Your stores will have access to `props`, as well as `propTypes` and `defaultProps`. By pulling this logic out of components it becomes much easier to test and reuse, and reduces the coupling of your business logic to React. With this separation, we can use react only for what it's good at: DOM lifecycle and manipulation.
 
-Stores can receive props in two ways. Props can be provided directly through the first argument; or the store can be associated with a react component, and it will have access to all the props of the component. These two sets of props are merged together and accessed by calling `this.props` in the store. Stores can also explicitly not be associated with components, in which case they will only receive the props provided through the first argument.
+Stores can receive props in two ways. Props can be provided directly through the first function argument; or you can explicitly provide them through setProps. These two sets of props are merged together and accessed by calling `this.props` in the store. Stores can also be associated with components, and they will have access to all the props of the component.
 
 ## API
 
 #### create
 
 ```ts
-static create(injectProps?: null | () => Partial<Props>, componentOrOptions?: null | React.Component<Partial<Props>> | { delayBinding: boolean })
+static create(injectProps?: null | () => Partial<Props>, options?: null | { waitForMoreProps: boolean })
 ```
 
 Create an instance of the store.
 
-Common examples, given a component with props `{ b: 2 }`:
+Common examples:
 
-| command                                                   | props            | runs init? |
-| --------------------------------------------------------- | ---------------- | ---------- |
-| `Store.create()`                                          | `{}`             | `true`     |
-| `Store.create(() => ({ a: 1 }))`                          | `{ a: 1 }`       | `true`     |
-| `Store.create(() => ({ a: 1 }), component)`               | `{ a: 1, b: 2 }` | `true`     |
-| `Store.create(null, component)`                           | `{ b: 2 }`       | `true`     |
-| `Store.create(() => ({ a: 1 })), { delayBinding: true })` | `{ a: 1 }`       | `false`    |
-| `Store.create(null, { delayBinding: true })`              | `{}`             | `false`    |
+| command                                                       | props      | runs init? |
+| ------------------------------------------------------------- | ---------- | ---------- |
+| `Store.create()`                                              | `{}`       | `true`     |
+| `Store.create(null, { waitForMoreProps: true })`              | `{}`       | `false`    |
+| `Store.create(() => ({ a: 1 }))`                              | `{ a: 1 }` | `true`     |
+| `Store.create(() => ({ a: 1 })), { waitForMoreProps: true })` | `{ a: 1 }` | `false`    |
 
 #### props
 
-The props for the store. Created by merging the return value of `injectProps` with the props associated with the bound component.
+The props for the store. Created by merging the return value of `injectProps` with the props set through setProps.
 
-#### bindComponent
+#### setProps
 
 ```ts
-bindComponent(component: React.Component<Partial<Props>> | null)
+setProps(props: Partial<Props>, options?: { waitForMoreProps: boolean })
 ```
 
-Bind the store to a component, or bind it to nothing by passing null.
+Sets the props of the store explicitly. These props will be merged with, and take precedence over, the props from the `injectProps` function. If called without `waitForMoreProps: true`, this will trigger `init`, unless it has already been triggered.
 
 #### enforcePropTypes
 
@@ -49,7 +47,17 @@ Defaults to `true`. This will cause your stores to throw errors if you access pr
 
 #### init
 
-Called at most once per instance of a store. This is called immediately after the store is bound (either by calling `bindComponent`, or by calling create without passing `{ delayBinding: true }` as the second argument. Typically all initialization code should go here rather than a constructor, as you will not be able to access `props` until the store has been bound.
+Called at most once per instance of a store. This is called immediately after the store is created unless you pass `waitForMoreProps: true`. Otherwise, it will be called the first time you call `setProps` without `waitForMoreProps: true`. Typically all initialization code should go here rather than a constructor, as you will not be able to access `props` until the store has been bound.
+
+## Other Utilities
+
+#### bindComponent
+
+```ts
+bindComponent(store: MobxBaseStore<Props>, component: React.Component<Partial<Props>>)
+```
+
+Bind the store to a component, causing it to keep the props of the store in sync with those of the component. For this to work the component must be an `observer` (from `mobx-react`).
 
 ## Example
 
@@ -57,7 +65,7 @@ https://codesandbox.io/s/1qj5wxpyvq
 
 ```jsx
 import React, { Component } from 'react';
-import MobxBaseStore from 'mobx-base-store';
+import MobxBaseStore, { bindComponent } from 'mobx-base-store';
 import { action, flow, observable } from 'mobx';
 import { observer } from 'mobx-react';
 import PropTypes from 'prop-types';
@@ -110,7 +118,8 @@ class Form extends Component {
   constructor(props) {
     super(props);
 
-    this.store = FormStore.create(null, this);
+    this.store = FormStore.create(null);
+    bindComponent(this.store, this);
   }
 
   render() {
