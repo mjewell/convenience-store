@@ -162,7 +162,7 @@ class Form extends Component {
 }
 ```
 
-For a more comprehensive example showing several different ways mobx-base-store can be used, check out this codesandbox: https://codesandbox.io/s/r43n32k6nn
+For a more comprehensive example showing several different ways mobx-base-store can be used, check out this codesandbox: https://codesandbox.io/s/2zo8jq38r0
 
 ## Design Decisions
 
