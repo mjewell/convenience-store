@@ -1,6 +1,6 @@
-# Mobx Base Store
+# Convenience Store
 
-Mobx base store allows you to take the logic out of your react components while maintaining a familiar api. Your stores will have access to `props`, as well as `propTypes` and `defaultProps`. By pulling this logic out of components it becomes much easier to test and reuse, and reduces the coupling of your business logic to React. With this separation, we can use react only for what it's good at: DOM lifecycle and manipulation.
+convenience-store allows you to take the logic out of your react components while maintaining a familiar api. Your stores will have access to `props`, as well as `propTypes` and `defaultProps`. By pulling this logic out of components it becomes much easier to test and reuse, and reduces the coupling of your business logic to React. With this separation, we can use react only for what it's good at: DOM lifecycle and manipulation.
 
 Stores can receive props in two ways. Props can be provided directly through the first function argument; or you can explicitly provide them through setProps. These two sets of props are merged together and accessed by calling `this.props` in the store. Stores can also be associated with components, and they will have access to all the props of the component.
 
@@ -54,7 +54,7 @@ Called at most once per instance of a store. This is called immediately after th
 #### bindComponent
 
 ```ts
-bindComponent(store: MobxBaseStore<Props>, component: React.Component<Partial<Props>>)
+bindComponent(store: ConvenienceStore<Props>, component: React.Component<Partial<Props>>)
 ```
 
 Bind the store to a component, causing it to keep the props of the store in sync with those of the component. For this to work the component must be an `observer` (from `mobx-react`).
@@ -65,12 +65,12 @@ https://codesandbox.io/s/1qj5wxpyvq
 
 ```jsx
 import React, { Component } from 'react';
-import MobxBaseStore, { bindComponent } from 'mobx-base-store';
+import ConvenienceStore, { bindComponent } from 'convenience-store';
 import { action, flow, observable } from 'mobx';
 import { observer } from 'mobx-react';
 import PropTypes from 'prop-types';
 
-class FormStore extends MobxBaseStore {
+class FormStore extends ConvenienceStore {
   static propTypes = {
     lastLogin: PropTypes.string
   };
@@ -162,7 +162,7 @@ class Form extends Component {
 }
 ```
 
-For a more comprehensive example showing several different ways mobx-base-store can be used, check out this codesandbox: https://codesandbox.io/s/2zo8jq38r0
+For a more comprehensive example showing several different ways convenience-store can be used, check out this codesandbox: https://codesandbox.io/s/2zo8jq38r0
 
 ## Design Decisions
 

@@ -6,7 +6,7 @@ import extractParams from './extractParams';
 import { isObject } from './typeChecking';
 import { InjectProps, PropTypes, StoreOptions } from './types';
 
-export default class MobxBaseStore<Props> {
+export default class ConvenienceStore<Props> {
   public static enforcePropTypes = true;
 
   public static propTypes?: PropTypes;
@@ -28,7 +28,7 @@ export default class MobxBaseStore<Props> {
   public init?(): void;
 
   @action
-  public static create<T extends MobxBaseStore<P>, P>(
+  public static create<T extends ConvenienceStore<P>, P>(
     this: new (...args: any[]) => T,
     maybeInjectProps: InjectProps<Partial<P>> | null = null,
     maybeOptions: StoreOptions | null = null
@@ -109,7 +109,7 @@ export default class MobxBaseStore<Props> {
 
   @computed
   public get defaultProps(): { [key: string]: any } {
-    return (this.constructor as typeof MobxBaseStore).defaultProps || {};
+    return (this.constructor as typeof ConvenienceStore).defaultProps || {};
   }
 
   @computed
@@ -132,7 +132,7 @@ export default class MobxBaseStore<Props> {
 
     /* istanbul ignore else */
     if (process.env.NODE_ENV !== 'production') {
-      const ConstructorClass = this.constructor as typeof MobxBaseStore;
+      const ConstructorClass = this.constructor as typeof ConvenienceStore;
       const storePropTypes = ConstructorClass.propTypes || {};
       const storeName = ConstructorClass.name;
 

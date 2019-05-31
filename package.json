@@ -1,5 +1,5 @@
 {
-  "name": "mobx-base-store",
+  "name": "convenience-store",
   "version": "0.2.0",
   "description": "",
   "license": "MIT",
@@ -17,11 +17,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/mjewell/mobx-base-store.git"
+    "url": "git+https://github.com/mjewell/convenience-store.git"
   },
   "author": "",
   "bugs": {
-    "url": "https://github.com/mjewell/mobx-base-store/issues"
+    "url": "https://github.com/mjewell/convenience-store/issues"
   },
   "devDependencies": {
     "@babel/cli": "^7.2.0",

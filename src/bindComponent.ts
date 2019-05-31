@@ -1,6 +1,6 @@
 import invariant from 'invariant';
 import { reaction, IReactionDisposer } from 'mobx';
-import MobxBaseStore from './BaseStore';
+import ConvenienceStore from './ConvenienceStore';
 import { isComponent } from './typeChecking';
 import { Component } from './types';
 
@@ -8,7 +8,7 @@ export default function bindComponent<
   StoreProps,
   ComponentProps extends Partial<{ [K in keyof StoreProps]: StoreProps[K] }>
 >(
-  store: MobxBaseStore<StoreProps>,
+  store: ConvenienceStore<StoreProps>,
   component: Component<ComponentProps>
 ): IReactionDisposer {
   invariant(isComponent(component), 'component must be a React component');

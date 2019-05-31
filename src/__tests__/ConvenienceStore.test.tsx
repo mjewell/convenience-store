@@ -1,10 +1,10 @@
 import { configure } from 'mobx';
 import PropTypes from 'prop-types';
-import BaseStore from '..';
+import ConvenienceStore from '..';
 
 configure({ enforceActions: 'observed' });
 
-class MyStore extends BaseStore<any> {
+class MyStore extends ConvenienceStore<any> {
   public static enforcePropTypes = false;
 
   public callback = jest.fn();
@@ -16,51 +16,51 @@ class MyStore extends BaseStore<any> {
 }
 
 it('errors if injectProps is not null or function', () => {
-  expect(() => BaseStore.create(0 as any)).toThrow(
+  expect(() => ConvenienceStore.create(0 as any)).toThrow(
     'injectProps must be null or a function'
   );
 
-  expect(() => BaseStore.create([] as any)).toThrow(
+  expect(() => ConvenienceStore.create([] as any)).toThrow(
     'injectProps must be null or a function'
   );
 
-  expect(() => BaseStore.create({} as any)).toThrow(
+  expect(() => ConvenienceStore.create({} as any)).toThrow(
     'injectProps must be null or a function'
   );
 
-  expect(() => BaseStore.create()).not.toThrow();
-  expect(() => BaseStore.create(null)).not.toThrow();
-  expect(() => BaseStore.create(() => ({}))).not.toThrow();
+  expect(() => ConvenienceStore.create()).not.toThrow();
+  expect(() => ConvenienceStore.create(null)).not.toThrow();
+  expect(() => ConvenienceStore.create(() => ({}))).not.toThrow();
 });
 
 it('errors if options is not null or options', () => {
-  expect(() => BaseStore.create(null, 0 as any)).toThrow(
+  expect(() => ConvenienceStore.create(null, 0 as any)).toThrow(
     'maybeOptions must be null or an options object'
   );
 
-  expect(() => BaseStore.create(null, [] as any)).toThrow(
+  expect(() => ConvenienceStore.create(null, [] as any)).toThrow(
     'maybeOptions must be null or an options object'
   );
 
-  expect(() => BaseStore.create(null, {} as any)).toThrow(
+  expect(() => ConvenienceStore.create(null, {} as any)).toThrow(
     'maybeOptions must be null or an options object'
   );
 
   expect(() =>
-    BaseStore.create(null, { waitForMoreProps: 123 } as any)
+    ConvenienceStore.create(null, { waitForMoreProps: 123 } as any)
   ).toThrow('maybeOptions must be null or an options object');
 
-  expect(() => BaseStore.create(null, null)).not.toThrow();
+  expect(() => ConvenienceStore.create(null, null)).not.toThrow();
   expect(() =>
-    BaseStore.create(null, { waitForMoreProps: false })
+    ConvenienceStore.create(null, { waitForMoreProps: false })
   ).not.toThrow();
   expect(() =>
-    BaseStore.create(null, { waitForMoreProps: true })
+    ConvenienceStore.create(null, { waitForMoreProps: true })
   ).not.toThrow();
 });
 
 it('errors if you access props in the constructor', () => {
-  class ConstructorPropsAccess extends BaseStore<{ x: number }> {
+  class ConstructorPropsAccess extends ConvenienceStore<{ x: number }> {
     public constructor(injectedProps: () => { x: number }) {
       super(injectedProps);
 
@@ -118,7 +118,7 @@ describe('create', () => {
 
 describe('init', () => {
   it('can access props', () => {
-    class InitPropsStore extends BaseStore<any> {
+    class InitPropsStore extends ConvenienceStore<any> {
       public static enforcePropTypes = false;
 
       public callback = jest.fn();
@@ -235,7 +235,7 @@ describe('props', () => {
 
 describe('propTypes', () => {
   it('throws if you access props that arent in the propTypes', () => {
-    class PropTypesClass extends BaseStore<{ a: number }> {
+    class PropTypesClass extends ConvenienceStore<{ a: number }> {
       public static propTypes = {
         a: PropTypes.number
       };
@@ -253,7 +253,7 @@ describe('propTypes', () => {
   });
 
   it('does not throw if you access props that arent in the propTypes when enforcePropTypes is false', () => {
-    class PropTypesClass extends BaseStore<{ a: number }> {
+    class PropTypesClass extends ConvenienceStore<{ a: number }> {
       public static enforcePropTypes = false;
 
       public static propTypes = {
@@ -273,7 +273,7 @@ describe('propTypes', () => {
   // this is not desired but proptypes doesn't let you inspect nested proptypes
   // this just serves as documentation of the current behaviour
   it('does not throw if you access nested props that arent in the propTypes', () => {
-    class PropTypesClass extends BaseStore<{ a: { b: number } }> {
+    class PropTypesClass extends ConvenienceStore<{ a: { b: number } }> {
       public static propTypes = {
         a: PropTypes.shape({
           b: PropTypes.number

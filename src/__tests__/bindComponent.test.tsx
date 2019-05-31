@@ -2,11 +2,11 @@ import { shallow } from 'enzyme';
 import { autorun, configure } from 'mobx';
 import { observer } from 'mobx-react';
 import React from 'react';
-import BaseStore, { bindComponent } from '..';
+import ConvenienceStore, { bindComponent } from '..';
 
 configure({ enforceActions: 'observed' });
 
-class MyStore extends BaseStore<any> {
+class MyStore extends ConvenienceStore<any> {
   public static enforcePropTypes = false;
 
   public callback = jest.fn();
@@ -38,7 +38,7 @@ it('sets the props to the components props', () => {
 it('reacts to observer components', done => {
   let count = 0;
 
-  class Store extends BaseStore<any> {
+  class Store extends ConvenienceStore<any> {
     public init(): void {
       autorun(() => {
         this.props; // eslint-disable-line no-unused-expressions
