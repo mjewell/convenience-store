@@ -1,8 +1,8 @@
-import { configure } from 'mobx';
-import PropTypes from 'prop-types';
-import ConvenienceStore from '..';
+import { configure } from "mobx";
+import PropTypes from "prop-types";
+import ConvenienceStore from "..";
 
-configure({ enforceActions: 'observed' });
+configure({ enforceActions: "observed" });
 
 class MyStore extends ConvenienceStore<any> {
   public static enforcePropTypes = false;
@@ -15,17 +15,17 @@ class MyStore extends ConvenienceStore<any> {
   }
 }
 
-it('errors if injectProps is not null or function', () => {
+it("errors if injectProps is not null or function", () => {
   expect(() => ConvenienceStore.create(0 as any)).toThrow(
-    'injectProps must be null or a function'
+    "injectProps must be null or a function"
   );
 
   expect(() => ConvenienceStore.create([] as any)).toThrow(
-    'injectProps must be null or a function'
+    "injectProps must be null or a function"
   );
 
   expect(() => ConvenienceStore.create({} as any)).toThrow(
-    'injectProps must be null or a function'
+    "injectProps must be null or a function"
   );
 
   expect(() => ConvenienceStore.create()).not.toThrow();
@@ -33,22 +33,22 @@ it('errors if injectProps is not null or function', () => {
   expect(() => ConvenienceStore.create(() => ({}))).not.toThrow();
 });
 
-it('errors if options is not null or options', () => {
+it("errors if options is not null or options", () => {
   expect(() => ConvenienceStore.create(null, 0 as any)).toThrow(
-    'maybeOptions must be null or an options object'
+    "maybeOptions must be null or an options object"
   );
 
   expect(() => ConvenienceStore.create(null, [] as any)).toThrow(
-    'maybeOptions must be null or an options object'
+    "maybeOptions must be null or an options object"
   );
 
   expect(() => ConvenienceStore.create(null, {} as any)).toThrow(
-    'maybeOptions must be null or an options object'
+    "maybeOptions must be null or an options object"
   );
 
   expect(() =>
     ConvenienceStore.create(null, { waitForMoreProps: 123 } as any)
-  ).toThrow('maybeOptions must be null or an options object');
+  ).toThrow("maybeOptions must be null or an options object");
 
   expect(() => ConvenienceStore.create(null, null)).not.toThrow();
   expect(() =>
@@ -59,7 +59,7 @@ it('errors if options is not null or options', () => {
   ).not.toThrow();
 });
 
-it('errors if you access props in the constructor', () => {
+it("errors if you access props in the constructor", () => {
   class ConstructorPropsAccess extends ConvenienceStore<{ x: number }> {
     public constructor(injectedProps: () => { x: number }) {
       super(injectedProps);
@@ -69,45 +69,45 @@ it('errors if you access props in the constructor', () => {
   }
 
   expect(() => ConstructorPropsAccess.create(() => ({ x: 1 }))).toThrowError(
-    'Setup must be complete before you can access props. Either you are using new instead of create, or you are accessing props in the constructor instead of init'
+    "Setup must be complete before you can access props. Either you are using new instead of create, or you are accessing props in the constructor instead of init"
   );
 });
 
-it('errors if you use new instead of create and access props', () => {
+it("errors if you use new instead of create and access props", () => {
   const store = new MyStore();
   expect(() => store.props).toThrowError(
-    'Setup must be complete before you can access props. Either you are using new instead of create, or you are accessing props in the constructor instead of init'
+    "Setup must be complete before you can access props. Either you are using new instead of create, or you are accessing props in the constructor instead of init"
   );
 });
 
-it('errors if you access props before setup is complete', () => {
+it("errors if you access props before setup is complete", () => {
   const store = MyStore.create(null, { waitForMoreProps: true });
 
   expect(() => store.props).toThrowError(
-    'Setup must be complete before you can access props.'
+    "Setup must be complete before you can access props."
   );
 });
 
-describe('create', () => {
-  it('runs init immediately if it receives no arguments', () => {
+describe("create", () => {
+  it("runs init immediately if it receives no arguments", () => {
     const store = MyStore.create() as MyStore;
 
     expect(store.callback).toHaveBeenCalled();
   });
 
-  it('runs init immediately if it only receives a single argument', () => {
+  it("runs init immediately if it only receives a single argument", () => {
     const store = MyStore.create(() => ({})) as MyStore;
 
     expect(store.callback).toHaveBeenCalled();
   });
 
-  it('runs init immediately if the second argument is null', () => {
+  it("runs init immediately if the second argument is null", () => {
     const store = MyStore.create(() => ({}), null) as MyStore;
 
     expect(store.callback).toHaveBeenCalled();
   });
 
-  it('does not run init immediately if the second argument has a true property called waitForMoreProps', () => {
+  it("does not run init immediately if the second argument has a true property called waitForMoreProps", () => {
     const store = MyStore.create(() => ({}), {
       waitForMoreProps: true
     });
@@ -116,8 +116,8 @@ describe('create', () => {
   });
 });
 
-describe('init', () => {
-  it('can access props', () => {
+describe("init", () => {
+  it("can access props", () => {
     class InitPropsStore extends ConvenienceStore<any> {
       public static enforcePropTypes = false;
 
@@ -132,18 +132,18 @@ describe('init', () => {
   });
 });
 
-describe('setProps', () => {
-  it('errors if props is not an object', () => {
+describe("setProps", () => {
+  it("errors if props is not an object", () => {
     const store = MyStore.create(null, { waitForMoreProps: true });
 
     expect(store.callback).not.toHaveBeenCalled();
 
     expect(() => store.setProps(1 as any)).toThrowError(
-      'props must be a plain object'
+      "props must be a plain object"
     );
   });
 
-  it('triggers init if it hasnt been triggered yet', () => {
+  it("triggers init if it hasnt been triggered yet", () => {
     const store = MyStore.create(null, { waitForMoreProps: true });
 
     expect(store.callback).not.toHaveBeenCalled();
@@ -153,7 +153,7 @@ describe('setProps', () => {
     expect(store.callback).toHaveBeenCalled();
   });
 
-  it('doesnt trigger init if it has been triggered', () => {
+  it("doesnt trigger init if it has been triggered", () => {
     const store = MyStore.create() as MyStore;
 
     expect(store.callback).toHaveBeenCalledTimes(1);
@@ -164,31 +164,31 @@ describe('setProps', () => {
   });
 });
 
-describe('props', () => {
-  it('is an empty object if no arguments are provided', () => {
+describe("props", () => {
+  it("is an empty object if no arguments are provided", () => {
     const store = MyStore.create();
 
     expect(store.props).toEqual({});
   });
 
-  it('errors if injectProps does not return an object', () => {
+  it("errors if injectProps does not return an object", () => {
     expect(() => {
       const store = MyStore.create(() => 1 as any);
       store.props; // eslint-disable-line no-unused-expressions
-    }).toThrow('injectProps must return an object');
+    }).toThrow("injectProps must return an object");
 
     expect(() => {
       const store = MyStore.create(() => [] as any);
       store.props; // eslint-disable-line no-unused-expressions
-    }).toThrow('injectProps must return an object');
+    }).toThrow("injectProps must return an object");
 
     expect(() => {
       const store = MyStore.create((() => null) as any);
       store.props; // eslint-disable-line no-unused-expressions
-    }).toThrow('injectProps must return an object');
+    }).toThrow("injectProps must return an object");
   });
 
-  it('is the result of the function that is passed as the first argument', () => {
+  it("is the result of the function that is passed as the first argument", () => {
     const store = MyStore.create(() => ({
       a: 1,
       b: 2
@@ -200,7 +200,7 @@ describe('props', () => {
     });
   });
 
-  it('is taken from the set props', () => {
+  it("is taken from the set props", () => {
     const store = MyStore.create();
 
     store.setProps({
@@ -214,7 +214,7 @@ describe('props', () => {
     });
   });
 
-  it('overwrites passed in props with those from the set props', () => {
+  it("overwrites passed in props with those from the set props", () => {
     const store = MyStore.create(() => ({
       a: 1,
       b: 2
@@ -233,8 +233,8 @@ describe('props', () => {
   });
 });
 
-describe('propTypes', () => {
-  it('throws if you access props that arent in the propTypes', () => {
+describe("propTypes", () => {
+  it("throws if you access props that arent in the propTypes", () => {
     class PropTypesClass extends ConvenienceStore<{ a: number }> {
       public static propTypes = {
         a: PropTypes.number
@@ -248,11 +248,11 @@ describe('propTypes', () => {
     const store = PropTypesClass.create(() => ({ a: 1, b: 2 } as any), null);
 
     expect(() => store.doSomething()).toThrowError(
-      'b not specified in propTypes for PropTypesClass'
+      "b not specified in propTypes for PropTypesClass"
     );
   });
 
-  it('does not throw if you access props that arent in the propTypes when enforcePropTypes is false', () => {
+  it("does not throw if you access props that arent in the propTypes when enforcePropTypes is false", () => {
     class PropTypesClass extends ConvenienceStore<{ a: number }> {
       public static enforcePropTypes = false;
 
@@ -272,7 +272,7 @@ describe('propTypes', () => {
 
   // this is not desired but proptypes doesn't let you inspect nested proptypes
   // this just serves as documentation of the current behaviour
-  it('does not throw if you access nested props that arent in the propTypes', () => {
+  it("does not throw if you access nested props that arent in the propTypes", () => {
     class PropTypesClass extends ConvenienceStore<{ a: { b: number } }> {
       public static propTypes = {
         a: PropTypes.shape({

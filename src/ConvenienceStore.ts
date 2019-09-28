@@ -1,10 +1,10 @@
-import invariant from 'invariant';
-import { action, computed, observable } from 'mobx';
-import { checkPropTypes } from 'prop-types';
-import enforcePropTypes from './enforcePropTypes';
-import extractParams from './extractParams';
-import { isObject } from './typeChecking';
-import { InjectProps, PropTypes, StoreOptions } from './types';
+import invariant from "invariant";
+import { action, computed, observable } from "mobx";
+import { checkPropTypes } from "prop-types";
+import enforcePropTypes from "./enforcePropTypes";
+import extractParams from "./extractParams";
+import { isObject } from "./typeChecking";
+import { InjectProps, PropTypes, StoreOptions } from "./types";
 
 export default class ConvenienceStore<Props> {
   public static enforcePropTypes = true;
@@ -30,7 +30,7 @@ export default class ConvenienceStore<Props> {
   @action
   public static create<T extends ConvenienceStore<P>, P>(
     this: new (...args: any[]) => T,
-    maybeInjectProps: InjectProps<Partial<P>> | null = null,
+    maybeInjectProps: InjectProps<Partial<T["props"]>> | null = null,
     maybeOptions: StoreOptions | null = null
   ): T {
     const instance = new this(maybeInjectProps, maybeOptions) as T;
@@ -59,13 +59,11 @@ export default class ConvenienceStore<Props> {
 
   private enforceCreateUsage(): void {
     /* istanbul ignore if */
-    if (process.env.NODE_ENV !== 'test') {
+    if (process.env.NODE_ENV !== "test") {
       setTimeout(() => {
         invariant(
           this.storeMetadata.constructorComplete,
-          `Stores should be created with ${
-            this.constructor.name
-          }.create instead of new ${this.constructor.name}`
+          `Stores should be created with ${this.constructor.name}.create instead of new ${this.constructor.name}`
         );
       });
     }
@@ -81,7 +79,7 @@ export default class ConvenienceStore<Props> {
 
     this.storeMetadata.setupComplete = true;
 
-    if (typeof this.init === 'function') {
+    if (typeof this.init === "function") {
       this.init();
     }
   }
@@ -91,7 +89,7 @@ export default class ConvenienceStore<Props> {
     props: Partial<Props>,
     maybeOptions: StoreOptions = { waitForMoreProps: false }
   ): void {
-    invariant(isObject(props), 'props must be a plain object');
+    invariant(isObject(props), "props must be a plain object");
 
     this.storeMetadata.waitForMoreProps = maybeOptions.waitForMoreProps;
     this.assignedProps = props;
@@ -102,7 +100,7 @@ export default class ConvenienceStore<Props> {
   public get injectedProps(): Partial<Props> {
     const injectedProps = this.injectProps();
 
-    invariant(isObject(injectedProps), 'injectProps must return an object');
+    invariant(isObject(injectedProps), "injectProps must return an object");
 
     return injectedProps;
   }
@@ -116,12 +114,12 @@ export default class ConvenienceStore<Props> {
   public get props(): Props {
     invariant(
       this.storeMetadata.constructorComplete,
-      'Setup must be complete before you can access props. Either you are using new instead of create, or you are accessing props in the constructor instead of init'
+      "Setup must be complete before you can access props. Either you are using new instead of create, or you are accessing props in the constructor instead of init"
     );
 
     invariant(
       this.storeMetadata.setupComplete,
-      'Setup must be complete before you can access props. Call setProps without providing waitForMoreProps'
+      "Setup must be complete before you can access props. Call setProps without providing waitForMoreProps"
     );
 
     const newProps = {
@@ -131,14 +129,14 @@ export default class ConvenienceStore<Props> {
     };
 
     /* istanbul ignore else */
-    if (process.env.NODE_ENV !== 'production') {
+    if (process.env.NODE_ENV !== "production") {
       const ConstructorClass = this.constructor as typeof ConvenienceStore;
       const storePropTypes = ConstructorClass.propTypes || {};
       const storeName = ConstructorClass.name;
 
       /* istanbul ignore if */
-      if (process.env.NODE_ENV !== 'test') {
-        checkPropTypes(storePropTypes, newProps, 'prop', storeName);
+      if (process.env.NODE_ENV !== "test") {
+        checkPropTypes(storePropTypes, newProps, "prop", storeName);
       }
 
       if (ConstructorClass.enforcePropTypes) {
